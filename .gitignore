@@ -1,2 +1,5 @@
 .idea/
+_temp/
+models/*
+validation_data/*
 __pycache__/
