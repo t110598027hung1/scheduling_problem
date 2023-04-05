@@ -26,6 +26,7 @@ matrix_fixture = [
 ]
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')
 class TestMatrix:
     @pytest.mark.parametrize('matrix, convert_tensor, _', matrix_fixture)
     def test_get_info(self, matrix, convert_tensor, _):
