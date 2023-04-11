@@ -518,6 +518,8 @@ class TimeBasedJSSP(DynamicJSSP, ABC):
         self.max_machines_size: dict = {}
         self.check_point_data: dict = {}
         self.check_point_queue: list = []
+        self.poisson_generator: scipy.poisson_gen = None
+        self.random_generator: np.RandomState = None
 
     def machine_event(self, machine_type, start_time):
         """
@@ -526,16 +528,16 @@ class TimeBasedJSSP(DynamicJSSP, ABC):
         current_size = len(self.machines_map[machine_type])
         max_size = self.max_machines_size[machine_type]
         min_size = 1
-        interval_time = scipy.stats.poisson.rvs(mu=self.poisson_mu)
+        interval_time = self.poisson_generator.rvs(mu=self.poisson_mu)
         prop = (max_size - current_size) / (max_size - min_size)
-        if random.random() < prop:
+        if self.random_generator.random() < prop:
             # add machines
-            number = random.randint(1, max_size - current_size)
+            number = self.random_generator.randint(1, max_size - current_size + 1)
             machine_index = None
         else:
             # delete machines
-            number = random.randint(min_size - current_size, -1)
-            machine_index = random.sample(range(current_size), -number)
+            number = self.random_generator.randint(min_size - current_size, 0)
+            machine_index = self.random_generator.choice(current_size, size=-number, replace=False)
         return start_time + interval_time, number, machine_index
 
     def init_machine_event(self):
@@ -599,8 +601,14 @@ class TimeBasedJSSP(DynamicJSSP, ABC):
             max_value = max_value + min_value - 1
             min_value = 1
         max_value += 1
-        num_of_machines = {m: np.floor(random.uniform(min_value, max_value)).astype(int) for m in type_name}
+        num_of_machines = {name: np.floor(
+            self.random_generator.uniform(min_value, max_value)).astype(int) for name in type_name}
         return num_of_machines
+
+    def set_random_seed(self, random_seed):
+        self.poisson_generator = scipy.stats.poisson
+        self.poisson_generator.random_state = random_seed
+        self.random_generator = np.random.RandomState(random_seed)
 
     def step(self, action: int):
         """
@@ -634,7 +642,8 @@ class TimeBasedJSSP(DynamicJSSP, ABC):
               data: list | np.ndarray = None,
               num_of_machines: dict = None,
               num_of_jobs: int = None,
-              num_of_machine_type: int = None):
+              num_of_machine_type: int = None,
+              random_seed: int = None):
         """
         重設環境
         """
@@ -642,6 +651,7 @@ class TimeBasedJSSP(DynamicJSSP, ABC):
         self.max_machines_size.clear()
         self.check_point_data.clear()
         self.check_point_queue.clear()
+        self.set_random_seed(random_seed)
         if data is None:
             return DynamicJSSP.reset(self, data, num_of_machines)
 
