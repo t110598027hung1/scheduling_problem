@@ -1,7 +1,6 @@
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge\&logo=windows\&logoColor=white)  
 
 ![coverage badge](./coverage.svg)  
-[show coverage report](./tests/coverage/index.html)  
 
 # Scheduling Problem
 使用深度強化學習求解動態機台數量的彈性零工式排程問題。  
@@ -39,7 +38,8 @@ pip install -r requirements.txt
 ```bash
 coverage run --omit="*test.py" -m pytest
 ```
-下列指令將覆蓋率數據轉換成 html 的報表。
+下列指令將覆蓋率數據轉換成 html 的報表。  
+您可以開啟 `./tests/coverage/index.html` 來檢視程式碼覆蓋狀況。  
 ```bash
 coverage html --skip-empty -d .\tests\coverage
 ```
