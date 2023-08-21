@@ -119,7 +119,7 @@ class JSSP(gym.Env, utils.EzPickle, ABC):
         job_action = node_action_3d[0]
         task_action = node_action_3d[1]
         if node_action in self.solution_set:
-            raise 'This action has already been executed.'
+            raise ValueError('This action has already been executed.')
 
         # update solution
         self.solution_sequence.append(node_action)

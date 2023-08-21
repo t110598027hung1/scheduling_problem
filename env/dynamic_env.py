@@ -1,6 +1,5 @@
 import gym
 import scipy
-import random
 import numpy as np
 from gym import utils
 from abc import ABC
@@ -233,11 +232,13 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
         # mask
         self.complete_task: dict = {}
         self.candidate_nodes: OrderedDict = OrderedDict()
+        self.pool_mask = set()
         # reward
         self.makespan: int = 0
         # solution
         self.machines_info: dict = {}
         self.jobs_info: dict = {}
+        self.action_info: list = []
 
     def get_feature(self):
         """
@@ -258,6 +259,20 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
                 'node_mask': node_mask,
                 'node_candidate': node_candidate,
                 'matrix_candidate': [self.matrix.node_map[n] for n in node_candidate]}
+
+    def get_pool_mask(self):
+        node_id_mask = {}
+        for job_id, job in self.jobs_map.items():
+            complete_len = len(job) - self.complete_task.get(job_id, 0)
+            for task in job[:complete_len]:
+                for node_id in task:
+                    if node_id not in self.pool_mask:
+                        node_id_mask[node_id] = True
+        mask = [False] * self.matrix.indices
+        for n, b in node_id_mask.items():
+            index = self.matrix.node_map[n]
+            mask[index] = b
+        return mask
 
     def done(self):
         """
@@ -402,7 +417,7 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
         machines_dict = self.machines_info.setdefault(machine_type, {})
         for machine_id in machine_list:
             info_dict = machines_dict.setdefault(machine_id, {})
-            info_dict[key] = value
+            info_dict[key] = int(value)
 
     def record_job_info(self, job_id, machine_id, start_time, end_time):
         """
@@ -412,8 +427,21 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
         tasks_list.append({
             'machine_type': self.machines_to_type[machine_id],
             'machine_id': machine_id,
-            'start': start_time,
-            'end': end_time,
+            'start': int(start_time),
+            'end': int(end_time),
+        })
+
+    def record_action_info(self, job_id, task_indices, machine_id, start_time, end_time):
+        """
+        紀錄執行動作序列的訊息
+        """
+        self.action_info.append({
+            'job_id': job_id,
+            'task_indices': task_indices,
+            'machine_type': self.machines_to_type[machine_id],
+            'machine_id': machine_id,
+            'start': int(start_time),
+            'end': int(end_time)
         })
 
     def step(self, action: int):
@@ -455,9 +483,11 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
             self.complete_task.pop(job_id)
         else:
             self.candidate_nodes[job_id] = self.jobs_map[job_id][task_indices + 1]
+        self.pool_mask.add(action)
 
         # update solution
         self.record_job_info(job_id, machine_id, end_time - duration, end_time)
+        self.record_action_info(job_id, task_indices, machine_id, end_time - duration, end_time)
 
         return self.get_feature(), reward, self.done(), False, self.get_info()
 
@@ -484,11 +514,13 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
         # reset mask
         self.complete_task.clear()
         self.candidate_nodes.clear()
+        self.pool_mask.clear()
         # reset reward
         self.makespan = 0
         # reset solution
         self.machines_info.clear()
         self.jobs_info.clear()
+        self.action_info.clear()
 
         # set machines and jobs
         if data is not None:
@@ -499,7 +531,7 @@ class DynamicJSSP(gym.Env, utils.EzPickle, ABC):
             for duration, machines in zip(data[0], data[1]):
                 self.add_jobs(duration, machines)
 
-        return self.get_feature(), self.get_info()
+            return self.get_feature(), self.get_info()
 
 
 class TimeBasedJSSP(DynamicJSSP, ABC):

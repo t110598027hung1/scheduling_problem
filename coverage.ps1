@@ -1,4 +1,5 @@
 conda activate scheduling_problem
-coverage run -m pytest
-coverage html --skip-empty --omit="*test.py" -d .\tests\coverage
+coverage run --omit="*test.py" -m pytest
+coverage html --skip-empty -d .\tests\coverage
+coverage-badge -o coverage.svg -f
 Start-Process tests\coverage\index.html

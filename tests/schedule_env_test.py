@@ -173,3 +173,36 @@ def test_random_choice_action():
     print('episode:', episode, 'size:', num_of_jobs, 'x', num_of_machines, 'x', num_of_each_machine)
     print('run time:', time.process_time() - start_time, 's')
     print('avg makespan:', sum(total_makespan) / episode)
+
+
+def test_reset_num_of_machines_is_none():
+    env = JSSP()
+    jss_data = [
+        [[30, 40, 10],
+         [20, 30, 30],
+         [20, 30, 30]],
+        [[1, 2, 3],
+         [3, 1, 2],
+         [3, 2, 1]]
+    ]
+    env.reset(jss_data)
+    assert env.machines_map == {1: [1], 2: [2], 3: [3]}
+
+
+def test_step_throw_exception():
+    try:
+        env = JSSP()
+        jss_data = [
+            [[30, 40, 10],
+             [20, 30, 30],
+             [20, 30, 30]],
+            [[1, 2, 3],
+             [3, 1, 2],
+             [3, 2, 1]]
+        ]
+        env.reset(jss_data)
+        env.step(0)
+        env.step(0)
+        assert False
+    except ValueError:
+        assert True

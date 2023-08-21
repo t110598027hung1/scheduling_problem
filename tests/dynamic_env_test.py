@@ -1,5 +1,6 @@
 import pytest
 import torch
+import random
 from env.dynamic_env import *
 
 
@@ -572,11 +573,47 @@ class TestDynamicJSSP:
         expected_makespan = 90
         simulation()
 
+    @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
+    def test_reset_num_of_machines_is_none(self, _, convert_tensor, token):
+        env = DynamicJSSP(matrix_type=token)
+        jss_data = [
+            [[30, 40, 10],
+             [20, 30, 30],
+             [20, 30, 30]],
+            [[1, 2, 3],
+             [3, 1, 2],
+             [3, 2, 1]]
+        ]
+        env.reset(jss_data)
+        assert env.machines_map == {1: [0], 2: [1], 3: [2]}
+
+    @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
+    def test_delete_machines_throw_exception(self, _, convert_tensor, token):
+        env = DynamicJSSP(matrix_type=token)
+        jss_data = [
+            [[30, 40, 10],
+             [20, 30, 30],
+             [20, 30, 30]],
+            [[1, 2, 3],
+             [3, 1, 2],
+             [3, 2, 1]]
+        ]
+
+    @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
+    def test_delete_machines_throw_exception(self, _, convert_tensor, token):
+        env = DynamicJSSP(matrix_type=token)
+        jss_data = [
+            [[30, 40, 10],
+             [20, 30, 30],
+             [20, 30, 30]],
+            [[1, 2, 3],
+             [3, 1, 2],
+             [3, 2, 1]]
+        ]
+
 
 class TestTimeBasedJSSP:
     def test_step_and_done(self):
-        random.seed(202)
-        np.random.seed(202)
         env = TimeBasedJSSP()
         jss_data = [
             [[30, 40, 20],
@@ -588,54 +625,54 @@ class TestTimeBasedJSSP:
              [3, 2, 1],
              [3, 1, 2]]
         ]
-        actions = [0, 5, 8, 10, 12, 14, 15, 3, 27, 9, 4, 19]
-        expected_num_of_nodes = [20, 20, 20, 12, 12, 12, 20, 20, 20, 12, 12, 12]
+        actions = [0, 5, 10, 7, 16, 12, 18, 14, 2, 19, 9, 20]
+        expected_num_of_nodes = [20, 20, 20, 20, 16, 12, 12, 20, 20, 20, 20, 20]
         expected_machines_map = [
-            {1: [0, 1], 2: [2, 3], 3: [4]},
-            {1: [0, 1], 2: [2, 3], 3: [4]},
-            {1: [0, 1], 2: [2, 3], 3: [4]},
-            {1: [1], 2: [3], 3: [4]},
-            {1: [1], 2: [3], 3: [4]},
-            {1: [1], 2: [3], 3: [4]},
-            {1: [1, 6], 2: [3, 5], 3: [4]},
-            {1: [1, 6], 2: [3, 5], 3: [4]},
-            {1: [1, 6], 2: [3, 5], 3: [4]},
-            {1: [1], 2: [3], 3: [4]},
-            {1: [1], 2: [3], 3: [4]},
-            {1: [1], 2: [3], 3: [4]}
+            {1: [0, 1], 2: [2], 3: [3, 4]},
+            {1: [0, 1], 2: [2], 3: [3, 4]},
+            {1: [0, 1], 2: [2], 3: [3, 4]},
+            {1: [0, 1], 2: [2], 3: [3, 4]},
+            {1: [0, 1], 2: [2], 3:    [4]},
+            {1:    [1], 2: [2], 3:    [4]},
+            {1:    [1], 2: [2], 3:    [4]},
+            {1: [1, 6], 2: [2], 3: [4, 5]},
+            {1: [1, 6], 2: [2], 3: [4, 5]},
+            {1: [1, 6], 2: [2], 3: [4, 5]},
+            {1: [1, 6], 2: [2], 3: [4, 5]},
+            {1: [1, 6], 2: [2], 3: [4, 5]}
         ]
         expected_machines_start_time = [
             {0:  30, 1:   0, 2:   0, 3:   0, 4:   0},
             {0:  30, 1:   0, 2:  20, 3:   0, 4:   0},
-            {0:  30, 1:  30, 2:  20, 3:   0, 4:   0},
-            {1:  30, 3:   0, 4:  30},
-            {1:  30, 3:  50, 4:  30},
-            {1:  60, 3:  50, 4:  30},
-            {1:  60, 3:  50, 4:  40, 5:  73, 6:  74},
-            {1:  60, 3:  90, 4:  40, 5:  73, 6:  74},
-            {1:  60, 3:  90, 4:  40, 5:  73, 6: 104},
-            {1:  60, 3:  90, 4: 100},
-            {1:  60, 3:  90, 4: 120},
-            {1:  60, 3: 134, 4: 120}
+            {0:  30, 1:   0, 2:  20, 3:  30, 4:   0},
+            {0:  30, 1:  30, 2:  20, 3:  30, 4:   0},
+            {0:  30, 1:  30, 2:  20, 4:  10},
+            {1:  30, 2:  50, 4:  10},
+            {1:  60, 2:  50, 4:  10},
+            {1:  70, 2:  50, 4:  10, 5:  80, 6:  84},
+            {1:  70, 2:  90, 4:  10, 5:  80, 6:  84},
+            {1:  70, 2: 120, 4:  10, 5:  80, 6:  84},
+            {1:  70, 2: 120, 4:  90, 5:  80, 6:  84},
+            {1:  70, 2: 120, 4:  90, 5: 110, 6:  84}
         ]
         expected_machine_event = [
-            {1:  (31, -1, [0]), 2:  (38, -1, [0])},
-            {1:  (31, -1, [0]), 2:  (38, -1, [0])},
-            {1:  (31, -1, [0]), 2:  (38, -1, [0])},
-            {1:  (74, 1, None), 2:  (73, 1, None)},
-            {1:  (74, 1, None), 2:  (73, 1, None)},
-            {1:  (74, 1, None), 2:  (73, 1, None)},
-            {1: (109, -1, [1]), 2: (108, -1, [1])},
-            {1: (109, -1, [1]), 2: (108, -1, [1])},
-            {1: (109, -1, [1]), 2: (108, -1, [1])},
-            {1: (146, 1, None), 2: (139, 1, None)},
-            {1: (146, 1, None), 2: (139, 1, None)},
-            {1: (146, 1, None), 2: (139, 1, None)}
+            {1: (50, -1, [0]), 3: (38, -1, [0])},
+            {1: (50, -1, [0]), 3: (38, -1, [0])},
+            {1: (50, -1, [0]), 3: (38, -1, [0])},
+            {1: (50, -1, [0]), 3: (38, -1, [0])},
+            {1: (50, -1, [0]), 3: (80, 1, None)},
+            {1: (84, 1, None), 3: (80, 1, None)},
+            {1: (84, 1, None), 3: (80, 1, None)},
+            {1: (128, -1, [0]), 3: (127, -1, [0])},
+            {1: (128, -1, [0]), 3: (127, -1, [0])},
+            {1: (128, -1, [0]), 3: (127, -1, [0])},
+            {1: (128, -1, [0]), 3: (127, -1, [0])},
+            {1: (128, -1, [0]), 3: (127, -1, [0])}
         ]
         expected_dones = [False, False, False, False, False, False, False, False, False, False, False, True]
-        expected_rewards = [0, 0, 0, 0, 0, 0, -10, -10, -24, 0, 0, 0]
-        expected_makespan = 134
-        env.reset(jss_data)
+        expected_rewards = [0, 0, 0, 0, 0, 0, 0, 0, -20, -10, 0, 0]
+        expected_makespan = 120
+        env.reset(jss_data, random_seed=200)
         for index, action in enumerate(actions):
             feature, reward, done, _, info = env.step(action)
             assert env.num_of_nodes == expected_num_of_nodes[index]
@@ -691,3 +728,28 @@ class TestTimeBasedJSSP:
             assert tasks[0]['start'] >= machine['start']
             if 'end' in machine:
                 assert tasks[0]['end'] <= machine['end']
+
+    def test_reset_with_data_is_none(self):
+        super_env = DynamicJSSP()
+        super_env.reset()
+        sub_env = TimeBasedJSSP()
+        sub_env.reset()
+        for attribute, value in super_env.__dict__.items():
+            comparison_value = sub_env.__dict__[attribute]
+            print(type(value), attribute)
+            if attribute == 'normalize_coefficient':
+                assert np.array_equal(comparison_value, value)
+            elif attribute == 'matrix':
+                assert type(comparison_value) == type(value)
+            else:
+                assert comparison_value == value
+
+    def test_reset_with_same_num_of_job_and_machines(self):
+        num_of_jobs = num_of_machines = 3
+        jss_data = [
+            [[random.randint(1, 99) for _ in range(num_of_machines)] for _ in range(num_of_jobs)],
+            [random.sample(range(1, num_of_machines + 1), num_of_machines) for _ in range(num_of_jobs)]
+        ]
+        env = TimeBasedJSSP()
+        env.reset(jss_data)
+        assert env.max_machines_size == {1: 1, 2: 1, 3: 1}
