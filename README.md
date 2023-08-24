@@ -6,7 +6,6 @@
 使用深度強化學習求解動態機台數量的彈性零工式排程問題。  
 Learning to Dispatch for Flexible Job-Shop Scheduling with Dynamic Number of Machines via Deep Reinforcement Learning.
 
----
 ## 目錄結構 Directory Structure
 =<font color='#ff3'>= 待寫 =</font>=
 ```
@@ -54,6 +53,16 @@ coverage-badge -o coverage.svg -f
 
 ## 操作介紹 Instruction
 =<font color='#ff3'>= 待寫 =</font>=
+
+## 常見問題 Q&A
+Q1: 使用 PyCharm 執行測試時，遇到錯誤訊息 TypeError: calling \<function XXX at OOO\> returned None, not a test.  
+
+A1: 請到工具列 File -> Settings -> Tools -> Python Integrated Tools -> Testing -> Default test runner，將值設定為 pytest。清空 Run/Debug Configuration 中所有 Python tests 的設定，最後重新運行測試。  
+可以參考 https://intellij-support.jetbrains.com/hc/en-us/community/posts/360002838580-Why-does-PyCharm-not-run-pytest-testing-for-my-application-
+
+Q2: 我要如何使用 CPU 或 GPU 來運行此程式？
+
+A2: 本程式透過 `util.py` 中的 `get_device()` 函式自動判斷是否有可用的 GPU，若有則使用第一順位的 GPU，若無則預設使用 CPU 來運行。
 
 ## 錯誤報告 Bug Report
 運行本專案時遇到任何問題，可以透過以下方式聯絡作者：

@@ -142,6 +142,17 @@ class TestMatrix:
         assert torch.equal(convert_tensor(matrix), torch.tensor(expect_matrix))
 
     @pytest.mark.parametrize('matrix, convert_tensor, _', matrix_fixture)
+    def test_batch_add_connects_throw_exception(self, matrix, convert_tensor, _):
+        matrix.clear()
+        matrix.new_full_connect([], range(1, 11))
+        try:
+            matrix.batch_add_connect(
+                [[7, 8, 1, 2, 3]],
+                [[4, 5, 6, 6]])
+        except ValueError:
+            assert True
+
+    @pytest.mark.parametrize('matrix, convert_tensor, _', matrix_fixture)
     def test_delete_node(self, matrix, convert_tensor, _):
         matrix.clear()
         matrix.new_full_connect([], [0])
@@ -574,6 +585,52 @@ class TestDynamicJSSP:
         simulation()
 
     @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
+    def test_get_pool_mask(self, _, convert_tensor, token):
+        env = DynamicJSSP(matrix_type=token)
+        jss_data = [
+            [[30, 40, 10],
+             [20, 30, 30]],
+            [[1, 2, 3],
+             [3, 1, 2]]
+        ]
+        num_of_machine = {1: 1, 2: 2, 3: 3}
+        env.reset(jss_data, num_of_machine)
+        expected_jobs_map = {0: [[0], [1, 2], [3, 4, 5]], 1: [[6, 7, 8], [9], [10, 11]]}
+        assert env.jobs_map == expected_jobs_map
+
+        env.step(0)
+        expected_mask = [False, False, False, False, False, False, False, False, False, False, False, False]
+        assert env.get_pool_mask() == expected_mask
+
+        env.step(6)
+        expected_mask = [False, False, False, False, False, False, False, True, True, False, False, False]
+        assert env.get_pool_mask() == expected_mask
+
+        env.step(2)
+        expected_mask = [False, True, False, False, False, False, False, True, True, False, False, False]
+        assert env.get_pool_mask() == expected_mask
+
+        env.add_machines(1, 1, 100)
+        expected_jobs_map = {0: [[0, 12], [1, 2], [3, 4, 5]], 1: [[6, 7, 8], [9, 13], [10, 11]]}
+        expected_mask = [False, True, False, False, False, False, False, True, True, False, False, False, True, False]
+        assert env.jobs_map == expected_jobs_map
+        assert env.get_pool_mask() == expected_mask
+
+        env.step(13)
+        expected_mask = [False, True, False, False, False, False, False, True, True, True, False, False, True, False]
+        assert env.get_pool_mask() == expected_mask
+
+        env.delete_machines(3, [1], 200)
+        expected_jobs_map = {0: [[0, 12], [1, 2], [3, 5]], 1: [[6, 8], [9, 13], [10, 11]]}
+        expected_mask = [False, True, False, False, False, False, True, True, False, False, True, False]
+        assert env.jobs_map == expected_jobs_map
+        assert env.get_pool_mask() == expected_mask
+
+        env.step(5)
+        expected_mask = [False, True, False, True, False, False, True, True, False, False, True, False]
+        assert env.get_pool_mask() == expected_mask
+
+    @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
     def test_reset_num_of_machines_is_none(self, _, convert_tensor, token):
         env = DynamicJSSP(matrix_type=token)
         jss_data = [
@@ -598,18 +655,12 @@ class TestDynamicJSSP:
              [3, 1, 2],
              [3, 2, 1]]
         ]
-
-    @pytest.mark.parametrize('_, convert_tensor, token', matrix_fixture)
-    def test_delete_machines_throw_exception(self, _, convert_tensor, token):
-        env = DynamicJSSP(matrix_type=token)
-        jss_data = [
-            [[30, 40, 10],
-             [20, 30, 30],
-             [20, 30, 30]],
-            [[1, 2, 3],
-             [3, 1, 2],
-             [3, 2, 1]]
-        ]
+        env.reset(jss_data)
+        try:
+            env.delete_machines(1, [0], 100)
+            assert False
+        except ValueError:
+            assert True
 
 
 class TestTimeBasedJSSP:
